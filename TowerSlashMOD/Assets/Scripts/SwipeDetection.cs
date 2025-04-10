@@ -1,23 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+
+public enum InputDirection
+{
+    RIGHT = 0,
+    DOWN = 1,
+    LEFT = 2,
+    UP = 3,
+    TAP = 4,
+    NULL = 5,
+}
 
 public class SwipeDetection : MonoBehaviour
 {
-    public enum InputDirection
-    {
-        RIGHT = 0,
-        DOWN = 1,
-        LEFT = 2,
-        UP = 3,
-        TAP = 4,
-        NULL = 5,
-    }
-
+    #region VARIABLES
     //swipe variables
     private Vector2 _startTouchPosition;
+
     private Vector2 _currentPosition;
     private Vector2 _endTouchPosition;
     private bool _stopTouch = false;
@@ -25,12 +23,16 @@ public class SwipeDetection : MonoBehaviour
     public float _tapRange;
 
     public InputDirection _inputDirection;
+    #endregion 
 
-    void Update()
+    #region UNITY MESSAGES
+    private void Update()
     {
-            Touch();
+        Touch();
     }
+    #endregion 
 
+    #region PUBLIC FUNCTIONS
     public void Touch()
     {
         //Swipe
@@ -86,4 +88,11 @@ public class SwipeDetection : MonoBehaviour
             }
         }
     }
+    #endregion 
+
+    #region PRIVATE FUNCTIONS
+    #endregion 
+
+    #region COROUTINES & HELPER FUNCTIONS
+    #endregion 
 }

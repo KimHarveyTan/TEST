@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 public class SpawnerController : Singleton<SpawnerController>
 {
-    [SerializeField] Transform  _enemySpawnPoint;
+    #region VARIABLES
+    [SerializeField] Transform _enemySpawnPoint;
     [SerializeField] GameObject _enemyPrefab;
     [SerializeField] GameObject _player;
     public List<GameObject> enemyList = new List<GameObject>();
@@ -16,9 +17,12 @@ public class SpawnerController : Singleton<SpawnerController>
     [SerializeField] Transform _playerSelectSP;
     public Transform _playerIngameSP;
     [SerializeField] Image GaugeBar;
-    [SerializeField] Button GaugeButton;
+    [SerializeField]
+    Button GaugeButton;
     public Image[] hearts;
+    #endregion
 
+    #region UNITY MESSAGES
     public void StartGame()
     {
         spawnerDelay = 1.3f;
@@ -32,35 +36,9 @@ public class SpawnerController : Singleton<SpawnerController>
             SpawnCharacterPlayerSelect(); // Always spawn the current character
         }
     }
+    #endregion
 
-    private void SpawnCharacterPlayerSelect()
-    {
-        // Clear all currently spawned characters
-        foreach (GameObject spawnedChar in _spawnedCharList)
-        {
-            Destroy(spawnedChar);
-        }
-        _spawnedCharList.Clear(); // Clear the list to remove references
-
-        // Instantiate the character from _charList at index 0 (first after rotation)
-        GameObject playerObj = Instantiate(_charList[0]);
-
-        // Set new transform.position
-        Vector3 newPosition = _playerSelectSP.position;
-        newPosition.z = 0;
-        RectTransform rectTransform = playerObj.GetComponent<RectTransform>();
-        rectTransform.position = newPosition;
-
-        // Initialize fields
-        Player playerComponent = playerObj.GetComponent<Player>();
-        playerComponent.GaugeBar = GaugeBar;
-        playerComponent.GaugeButton = GaugeButton;
-        playerComponent.hearts = hearts;
-
-        // Add the new player object to the spawned list
-        _spawnedCharList.Add(playerObj);
-    }
-
+    #region PUBLIC FUNCTIONS
     public void SpawnCharacterIngame()
     {
         // Clear all currently spawned characters
@@ -90,6 +68,8 @@ public class SpawnerController : Singleton<SpawnerController>
 
         // Add the new player object to the spawned list
         _spawnedCharList.Add(playerObj);
+
+
     }
 
     public void MoveCharacter(int direction)
@@ -134,25 +114,6 @@ public class SpawnerController : Singleton<SpawnerController>
         MoveCharacter(1); // Move right
     }
 
-    IEnumerator SpawnStart()
-    {
-        Debug.Log("Spawning...");
-
-        while (GameManager.Instance.Player.IsAlive)
-        {
-            SpawnEnemy();
-            yield return new WaitForSeconds(spawnerDelay);
-        }
-    }
-
-    void SpawnEnemy()
-    {
-        GameObject enemyObj = (GameObject)Instantiate(_enemyPrefab);
-        enemyObj.transform.position = _enemySpawnPoint.position;
-        enemyObj.GetComponent<Enemy>()._player = _spawnedCharList[0];
-        enemyList.Add(enemyObj);
-    }
-
     public void RemoveEnemy(GameObject obj)
     {
         if (obj != null && enemyList.Contains(obj))
@@ -163,7 +124,7 @@ public class SpawnerController : Singleton<SpawnerController>
     }
 
     public void Reset()
-	{
+    {
         // Create a temporary list to store enemies to remove
         List<GameObject> enemiesToRemove = new List<GameObject>();
 
@@ -186,4 +147,56 @@ public class SpawnerController : Singleton<SpawnerController>
 
         spawnerDelay = 1.3f;
     }
+    #endregion
+
+    #region PRIVATE FUNCTIONS
+    private void SpawnCharacterPlayerSelect()
+    {
+        // Clear all currently spawned characters
+        foreach (GameObject spawnedChar in _spawnedCharList)
+        {
+            Destroy(spawnedChar);
+        }
+        _spawnedCharList.Clear(); // Clear the list to remove references
+
+        // Instantiate the character from _charList at index 0 (first after rotation)
+        GameObject playerObj = Instantiate(_charList[0]);
+
+        // Set new transform.position
+        Vector3 newPosition = _playerSelectSP.position;
+        newPosition.z = 0;
+        RectTransform rectTransform = playerObj.GetComponent<RectTransform>();
+        rectTransform.position = newPosition;
+
+        // Initialize fields
+        Player playerComponent = playerObj.GetComponent<Player>();
+        playerComponent.GaugeBar = GaugeBar;
+        playerComponent.GaugeButton = GaugeButton;
+        playerComponent.hearts = hearts;
+
+        // Add the new player object to the spawned list
+        _spawnedCharList.Add(playerObj);
+    }
+
+    void SpawnEnemy()
+    {
+        GameObject enemyObj = (GameObject)Instantiate(_enemyPrefab);
+        enemyObj.transform.position = _enemySpawnPoint.position;
+        enemyObj.GetComponent<Enemy>()._player = _spawnedCharList[0];
+        enemyList.Add(enemyObj);
+    }
+    #endregion
+
+    #region COROUTINES & HELPER FUNCTIONS
+    IEnumerator SpawnStart()
+    {
+        Debug.Log("Spawning...");
+
+        while (GameManager.Instance.Player.IsAlive)
+        {
+            SpawnEnemy();
+            yield return new WaitForSeconds(spawnerDelay);
+        }
+    }
+    #endregion
 }

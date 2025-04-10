@@ -6,6 +6,7 @@ using TMPro;
 
 public class GameplayMgr : Singleton<GameplayMgr>
 {
+    #region VARIABLES
     public GameObject _player;
     [SerializeField] int _score;
     [SerializeField] TextMeshProUGUI _scoreDisplay;
@@ -13,10 +14,12 @@ public class GameplayMgr : Singleton<GameplayMgr>
     public GameObject _background; //bg
     public float _bgSpeed;
     private Vector3 _bgStartPosition;
+    #endregion
 
+    #region UNITY MESSAGES
     void Start()
     {
-        if(_player != null)
+        if (_player != null)
         {
             if (!_player.GetComponent<Player>()._isOnDash)
             {
@@ -44,16 +47,9 @@ public class GameplayMgr : Singleton<GameplayMgr>
             _background.transform.position = _bgStartPosition;
         }
     }
+    #endregion
 
-    private IEnumerator addScoreByTime(int value, float delay)
-    {
-        while (_player.GetComponent<Player>().IsAlive)
-        {
-            yield return new WaitForSeconds(delay);
-            _score += value;
-        }
-    }
-
+    #region PUBLIC FUNCTIONS
     public void addScore(int value)
     {
         _score += value;
@@ -69,4 +65,19 @@ public class GameplayMgr : Singleton<GameplayMgr>
     {
         _scoreDisplay.text = $"SCORE:{_score}";
     }
+    #endregion
+
+    #region PRIVATE FUNCTIONS
+    #endregion
+
+    #region COROUTINES & HELPER FUNCTIONS
+    private IEnumerator addScoreByTime(int value, float delay)
+    {
+        while (_player.GetComponent<Player>().IsAlive)
+        {
+            yield return new WaitForSeconds(delay);
+            _score += value;
+        }
+    }
+    #endregion
 }

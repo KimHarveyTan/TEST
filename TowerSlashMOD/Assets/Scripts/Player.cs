@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
+    #region VARIABLES
     SwipeDetection _swipeDetection;
     Vector3 _startPos;
     bool _isAlive = false;
@@ -17,13 +18,7 @@ public class Player : MonoBehaviour
     [SerializeField] GameObject _enemy;
     public bool _isPlayerNear;
     public float _moveDistance;
-
-    /* //health bar //old health
-    [SerializeField] float curHealth;
-    [SerializeField] float maxHealth;
-    [SerializeField] Image healthBar;
-    */
-
+    
     //health sprites //new health
     public int health;
     public int numOfHearts; //max health
@@ -39,13 +34,9 @@ public class Player : MonoBehaviour
             return _isAlive;
         }
     }
+    #endregion
 
-    /*
-    private GameObject _enemy;
-    private string _inputString;
-    private string _arrowDirection;
-    */
-
+    #region UNITY MESSAGES
     private void Awake()
     {
         GameManager.Instance.Player = this;
@@ -67,21 +58,25 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        if (_swipeDetection._inputDirection == SwipeDetection.InputDirection.TAP) //Dash Tap 
+        if (_swipeDetection._inputDirection == InputDirection.TAP) //Dash Tap 
         {
             GameplayMgr.Instance.addScore(6);
-
+            /*
             foreach (GameObject enemyObj in SpawnerController.Instance.enemyList)
             {
                 Vector3 enemyPos = enemyObj.transform.position;
                 enemyPos.y -= 2;
                 enemyObj.transform.position = enemyPos;
-                _swipeDetection._inputDirection = SwipeDetection.InputDirection.NULL;
+                _swipeDetection._inputDirection = InputDirection.NULL;
             }
 
             Vector3 bgPos = GameplayMgr.Instance._background.transform.position;
             bgPos.y -= 2;
             GameplayMgr.Instance._background.transform.position = bgPos;
+            */
+
+            StartCoroutine(CO_ShortBGAndEnemySpeed());
+            _swipeDetection._inputDirection = InputDirection.NULL;
         }
 
         if (curGauge < 100) //Gauge Button
@@ -96,7 +91,7 @@ public class Player : MonoBehaviour
 
         if (!_isPlayerNear)
         {
-            _swipeDetection._inputDirection = SwipeDetection.InputDirection.NULL;
+            _swipeDetection._inputDirection = InputDirection.NULL;
         }
 
         UpdateHealthUI();
@@ -153,12 +148,16 @@ public class Player : MonoBehaviour
                             }
 
                             //move bg
+                            /*
                             Vector3 bgPos = GameplayMgr.Instance._background.transform.position;
                             bgPos.y -= _moveDistance;
                             GameplayMgr.Instance._background.transform.position = bgPos;
+                            */
+
+                            StartCoroutine(CO_ShortBGSpeed());
 
                             StartCoroutine(RemoveEnemyAfterDelay(collision.gameObject, 0.03f)); // Start a coroutine to remove the enemy after delay
-                            AddGauge(5);
+                            AddGauge(100);
                             UpdateGauge();
 
                             // 3% chance to increase health
@@ -169,51 +168,37 @@ public class Player : MonoBehaviour
                     if (_isOnDash == true)
                     {
                         IncreaseEnemyspawnAndSpeed(); //start CO_IncreaseEnemyspawnAndSpeed, coroutine
-
-                        ///instant kill upon contact with the first EnemyCollision
-                        ///move Enemy pos.y to 1 above the Player pos.y
-                        _moveDistance = enemy.transform.position.y - this.transform.position.y; //distance to the player pos
-                        _moveDistance -= 1; // distance above the pos.y of player
-                                            //move the collided enemy GO
-                        Vector3 enemyPosition = enemy.transform.position;
-                        enemyPosition.y -= _moveDistance;
-                        enemy.transform.position = enemyPosition;
-                        enemy._moveSpeed = 0;
-                        StartCoroutine(RemoveEnemyAfterDelay(collision.gameObject, 0.03f)); // Start a coroutine to remove the enemy after delay
-
-                        /// Move all other enemies by the same distance every kill
-                        foreach (GameObject enemyObj in SpawnerController.Instance.enemyList)
-                        {
-                            if (enemyObj != SpawnerController.Instance.enemyList[0] && enemyObj != null) // Check if it's not the first enemy in list
-                            {
-                                Vector3 enemyPos = enemyObj.transform.position;
-                                enemyPos.y -= _moveDistance;
-                                enemyObj.transform.position = enemyPos;
-                            }
-                        }
-
-                        //move bg
-                        Vector3 bgPos = GameplayMgr.Instance._background.transform.position;
-                        bgPos.y -= _moveDistance;
-                        GameplayMgr.Instance._background.transform.position = bgPos;
                     }
                 }
             }
         }
-        
+
         if (collision.gameObject.name.Contains("EnemyTrigger"))
         {
-            Debug.Log("Enemy object entered!");
-            SpawnerController.Instance.RemoveEnemy(collision.transform.parent.gameObject);
-            _isPlayerNear = false;
 
-            //MINUS HEALTH HERE
-            //TakeDamage(10);
-            TakeDamage2(1);
+            Debug.Log("Enemy object entered!");
+
+            if (_isOnDash == false)
+            {
+                SpawnerController.Instance.RemoveEnemy(collision.transform.parent.gameObject);
+                _isPlayerNear = false;
+
+                //MINUS HEALTH HERE
+                //TakeDamage(10);
+                TakeDamage2(1);
+            }
+
+            if (_isOnDash == true)
+            {
+                SpawnerController.Instance.RemoveEnemy(collision.transform.parent.gameObject);
+                _isPlayerNear = false;
+                GameplayMgr.Instance.addScore(20);
+            }
         }
     }
+    #endregion
 
-    /// FUNCTIONS
+    #region PUBLIC FUNCTIONS
     /*
     public void TakeDamage(float damage)
     {
@@ -341,7 +326,27 @@ public class Player : MonoBehaviour
             GameplayMgr.Instance.addScore(20);
         }
     }
+    #endregion
 
+    #region PRIVATE FUNCTIONS
+    private void chanceIncreaseHealth()
+    {
+        // 3% chance to increase health
+        float chance = Random.Range(0f, 100f);
+        if (chance <= 3f && health < numOfHearts) // 3% chance and only increase if health is below the max
+        {
+            health += 1;
+            UpdateHealthUI();
+            Debug.Log("Health increased by 1!");
+        }
+        else if (health >= numOfHearts)
+        {
+            Debug.Log("Health is already at maximum.");
+        }
+    }
+    #endregion
+
+    #region COROUTINES & HELPER FUNCTIONS
     IEnumerator CO_IncreaseEnemyspawnAndSpeed()
     {
         SpawnerController.Instance.spawnerDelay = .6f; //lessen spawn delay
@@ -378,26 +383,45 @@ public class Player : MonoBehaviour
         _isOnDash = false;
         UpdateGauge();
     }
-    private void chanceIncreaseHealth()
+
+    IEnumerator CO_ShortBGSpeed() // Used after kill
     {
-        // 3% chance to increase health
-        float chance = Random.Range(0f, 100f);
-        if (chance <= 3f && health < numOfHearts) // 3% chance and only increase if health is below the max
-        {
-            health += 1;
-            UpdateHealthUI();
-            Debug.Log("Health increased by 1!");
-        }
-        else if (health >= numOfHearts)
-        {
-            Debug.Log("Health is already at maximum.");
-        }
+        GameplayMgr.Instance._bgSpeed *= 9.6f;
+        yield return new WaitForSeconds(.06f);
+        GameplayMgr.Instance._bgSpeed /= 9.6f;
     }
 
-    /*
-    void Movement(Vector3 direction)
+    IEnumerator CO_ShortBGAndEnemySpeed() // Used for dash tap
     {
-        this.transform.position += direction;
+        foreach (GameObject enemyObj in SpawnerController.Instance.enemyList)
+        {
+            if (enemyObj != null)
+            {
+                Enemy enemy = enemyObj.GetComponent<Enemy>();
+                if (enemy != null)
+                {
+                    enemy._moveSpeed = 40.0f; // Increase speed
+                    enemy.GetComponent<SpriteRenderer>().color = Color.yellow;
+                    Debug.Log("Increased speed for: " + enemyObj.name);
+                }
+            }
+        }
+
+        yield return new WaitForSeconds(.06f);
+
+        foreach (GameObject enemyObj in SpawnerController.Instance.enemyList)
+        {
+            if (enemyObj != null)
+            {
+                Enemy enemy = enemyObj.GetComponent<Enemy>();
+                if (enemy != null)
+                {
+                    enemy._moveSpeed = 6.6f; // Reset speed
+                    enemy.GetComponent<SpriteRenderer>().color = Color.red;
+                    Debug.Log("Restored speed for: " + enemyObj.name);
+                }
+            }
+        }
     }
-    */
+    #endregion
 }

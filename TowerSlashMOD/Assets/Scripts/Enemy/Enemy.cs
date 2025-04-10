@@ -5,23 +5,24 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.VFX;
 
+public enum ArrowDirection
+{
+    RIGHT = 0,
+    DOWN = 1,
+    LEFT = 2,
+    UP = 3,
+}
+
+public enum EnemyType
+{
+    GREEN,
+    RED,
+    ROTATING,
+}
+
 public class Enemy : MonoBehaviour
 {
-    public enum ArrowDirection
-    {
-        RIGHT = 0,
-        DOWN = 1,
-        LEFT = 2,
-        UP = 3,
-    }
-
-    public enum EnemyType
-    {
-        GREEN,
-        RED,
-        ROTATING,
-    }
-
+    #region VARIABLES
     [SerializeField] EnemyType _enemyType;
     [SerializeField] SpriteRenderer _arrowObj;
     [SerializeField] Sprite[] _arrows;
@@ -30,11 +31,12 @@ public class Enemy : MonoBehaviour
     public ArrowDirection _arrowDirection;
     public GameObject _player;
     public float _moveSpeed;
+    #endregion
 
-
+    #region UNITY MESSAGES
     void Start()
     {
-        if(!_player.GetComponent<Player>()._isOnDash)
+        if (!_player.GetComponent<Player>()._isOnDash)
         {
             _moveSpeed = 6.6f;
         }
@@ -72,7 +74,6 @@ public class Enemy : MonoBehaviour
             StartCoroutine(CO_ArrowRotation());
         }
     }
-
     // Update is called once per frame
     void Update()
     {
@@ -81,13 +82,32 @@ public class Enemy : MonoBehaviour
         if (_player != null)
         {
             _isPlayerNear = _player.GetComponent<Player>()._isPlayerNear;
-        }     
+        }
     }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.name.Contains("Player"))
+        {
+            _arrowObj.GetComponent<Transform>().localScale *= 1.3f;
 
-    
+        }
+    }
+    #endregion
+
+    #region PUBLIC FUNCTIONS
+    public void Reset()
+    {
+        _moveSpeed = 6f;
+    }
+    #endregion
+
+    #region PRIVATE FUNCTIONS
+    #endregion
+
+    #region COROUTINES & HELPER FUNCTIONS
     private IEnumerator CO_ArrowRotation()
     {
-        if(_enemyType == EnemyType.ROTATING)
+        if (_enemyType == EnemyType.ROTATING)
         {
             //rotate arrows
             int arrowIndex = 0;
@@ -108,20 +128,5 @@ public class Enemy : MonoBehaviour
             _arrowDirection = (ArrowDirection)_randArrowNum;
         }
     }
-    
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.gameObject.name.Contains("Player"))
-        {
-            _arrowObj.GetComponent<Transform>().localScale *= 1.3f;
-
-        }
-    }
-
-    public void Reset()
-    {
-        _moveSpeed = 6f;
-    }
-
+    #endregion
 }
